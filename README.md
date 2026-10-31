@@ -124,10 +124,10 @@ recovery and Quarantine around features that should switch off when they keep fa
 
 ## Support
 
-If this saves you time, you can buy me a coffee. It keeps the helder-studio libraries maintained.
+If this saves you time, you can buy me a coffee on Ko-fi. It keeps the helder-studio libraries maintained.
 
-<a href="https://buymeacoffee.com/gorian" target="_blank" rel="noopener">
-  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" height="48">
+<a href="https://ko-fi.com/gorian" target="_blank" rel="noopener">
+  <img src="https://storage.ko-fi.com/cdn/kofi3.png?v=6" alt="Support me on Ko-fi" height="40">
 </a>
 
 ## License
