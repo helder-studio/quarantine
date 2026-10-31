@@ -44,7 +44,7 @@ MVP + most of v0.1 done: `src/core/ledger.ts` (pure ledger), `src/core/store.ts`
 hydration, appVersion reset, `onQuarantine`, dev guard, never-throw persistence under one key
 `helder-studio:quarantine`), `src/react/index.tsx` (provider, `<Quarantine>`, class boundary).
 React tests run in happy-dom with React's `act` (no Testing Library). Examples: `examples/next` and `examples/expo` install the library from `examples/quarantine.tgz`
-(`pnpm example:pack`; `file:` directory links don't copy `dist` on exFAT). Next: RNTL test, then v0.2 (`isReleased`, `useQuarantineReport`, multi-tab sync, `list`/`release`).
+(`pnpm example:pack`; `file:` directory links don't copy `dist` on exFAT). v0.2 done (`isReleased`, `useQuarantineReport`, multi-tab sync via the `storage` event, `list`/`release`). Open: RNTL test.
 
 ## Commands
 

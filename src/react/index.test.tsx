@@ -6,7 +6,7 @@ import { createRoot, hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
 import { createQuarantine, type QuarantineStore } from '../core/store';
-import { Quarantine, QuarantineProvider } from './index';
+import { Quarantine, QuarantineProvider, useQuarantineReport } from './index';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -14,6 +14,12 @@ let shouldThrow = true;
 function Feature() {
   if (shouldThrow) throw new Error('boom');
   return <span>feature</span>;
+}
+
+let report: () => void = () => {};
+function Reporter() {
+  report = useQuarantineReport('upsell', { maxCrashes: 2 });
+  return null;
 }
 
 function App({ store }: { store: QuarantineStore }) {
@@ -113,6 +119,21 @@ describe('<Quarantine>', () => {
     });
     expect(el.textContent).toBe('off');
     expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('useQuarantineReport counts crashes outside render toward the same feature', () => {
+    shouldThrow = false;
+    const store = createQuarantine({ quarantineInDev: true });
+    const el = mount(
+      <QuarantineProvider value={store}>
+        <Reporter />
+        <App store={store} />
+      </QuarantineProvider>,
+    );
+    expect(el.textContent).toBe('feature');
+    act(() => report());
+    act(() => report());
+    expect(el.textContent).toBe('off');
   });
 
   it('throws a clear error without a provider', () => {

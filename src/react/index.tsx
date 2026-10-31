@@ -1,10 +1,41 @@
-import { Component, createContext, type ReactNode, useContext, useSyncExternalStore } from 'react';
+import {
+  Component,
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useSyncExternalStore,
+} from 'react';
 import type { CrashPolicy, QuarantineStore } from '../core/store';
 
 const QuarantineContext = createContext<QuarantineStore | null>(null);
 
 /** Makes a store from `createQuarantine()` available to every `<Quarantine>` below. */
 export const QuarantineProvider = QuarantineContext.Provider;
+
+function useStore(caller: string): QuarantineStore {
+  const store = useContext(QuarantineContext);
+  if (!store) throw new Error(`${caller} needs a <QuarantineProvider> above it.`);
+  return store;
+}
+
+/**
+ * Reports crashes an error boundary can't see (event handlers, async code) for feature `id`.
+ * Pass the same policy as the matching `<Quarantine>`. Returns a stable `report()` callback.
+ */
+export function useQuarantineReport(id: string, policy: CrashPolicy = {}): () => void {
+  const store = useStore('useQuarantineReport');
+  const { maxCrashes, window, cooldown } = policy;
+  return useCallback(
+    () =>
+      store.recordCrash(id, {
+        ...(maxCrashes !== undefined && { maxCrashes }),
+        ...(window !== undefined && { window }),
+        ...(cooldown !== undefined && { cooldown }),
+      }),
+    [store, id, maxCrashes, window, cooldown],
+  );
+}
 
 type RetryFallback = ReactNode | ((retry: () => void) => ReactNode);
 
@@ -26,8 +57,7 @@ export function Quarantine({
   retryFallback,
   ...policy
 }: QuarantineProps) {
-  const store = useContext(QuarantineContext);
-  if (!store) throw new Error('<Quarantine> needs a <QuarantineProvider> above it.');
+  const store = useStore('<Quarantine>');
   // Server and hydration render as "not quarantined"; the client applies it right after.
   const quarantined = useSyncExternalStore(
     store.subscribe,

@@ -4,6 +4,13 @@ import { recordCrash as addCrash, isQuarantined, type Ledger } from './ledger';
 
 declare const __DEV__: boolean | undefined;
 declare const process: { env: { NODE_ENV?: string } } | undefined;
+// Present in browsers only; used for multi-tab sync.
+declare const addEventListener:
+  | ((
+      type: 'storage',
+      listener: (event: { key: string | null; newValue: string | null }) => void,
+    ) => void)
+  | undefined;
 
 export interface QuarantineEvent {
   id: string;
@@ -20,6 +27,8 @@ export interface QuarantineOptions {
   appVersion?: string;
   /** Fires once per quarantine, not per crash. */
   onQuarantine?: (event: QuarantineEvent) => void;
+  /** Remote override: return `true` to switch a quarantined feature back on (e.g. from a feature flag). */
+  isReleased?: (id: string) => boolean;
   /** Development builds record crashes but never quarantine unless this is set. */
   quarantineInDev?: boolean;
   /** Clock, for tests. */
@@ -35,10 +44,22 @@ export interface CrashPolicy {
   cooldown?: Duration;
 }
 
+export interface QuarantineEntry {
+  id: string;
+  /** Crashes recorded in the current window. */
+  crashes: number;
+  quarantinedUntil?: number;
+  quarantined: boolean;
+}
+
 export interface QuarantineStore {
   recordCrash(id: string, policy?: CrashPolicy): void;
   isQuarantined(id: string): boolean;
   subscribe(listener: () => void): () => void;
+  /** Every feature with crash history, for debugging screens. */
+  list(): QuarantineEntry[];
+  /** Clears one feature's history and quarantine. */
+  release(id: string): void;
   /** Resolves once stored state is loaded (immediately for sync storage). */
   readonly ready: Promise<void>;
 }
@@ -57,7 +78,7 @@ function isDev(): boolean {
 }
 
 export function createQuarantine(options: QuarantineOptions = {}): QuarantineStore {
-  const { storage = memory(), appVersion, onQuarantine, now = Date.now } = options;
+  const { storage = memory(), appVersion, onQuarantine, isReleased, now = Date.now } = options;
   const active = options.quarantineInDev === true || !isDev();
   const listeners = new Set<() => void>();
   let ledgers: Record<string, Ledger> = {};
@@ -91,16 +112,21 @@ export function createQuarantine(options: QuarantineOptions = {}): QuarantineSto
     }
   };
 
-  const load = (raw: string | null) => {
+  const parse = (raw: string | null): Record<string, Ledger> => {
     try {
       const data = raw ? (JSON.parse(raw) as Persisted) : undefined;
       if (data?.v === 1 && (appVersion === undefined || data.appVersion === appVersion)) {
-        // ponytail: ids crashed before hydration keep only their in-memory ledger.
-        ledgers = { ...data.ledgers, ...ledgers };
+        return data.ledgers;
       }
     } catch {
       // Corrupt data: start empty.
     }
+    return {};
+  };
+
+  const load = (raw: string | null) => {
+    // ponytail: ids crashed before hydration keep only their in-memory ledger.
+    ledgers = { ...parse(raw), ...ledgers };
     hydrated = true;
     if (dirty) persist();
   };
@@ -116,13 +142,47 @@ export function createQuarantine(options: QuarantineOptions = {}): QuarantineSto
       ? Promise.resolve(load(raw))
       : raw.then(load, () => load(null)).then(emit);
 
+  // Another tab wrote localStorage: adopt its state. Never fires for the writing tab itself.
+  // ponytail: the listener lives as long as the page; stores are app-lifetime singletons.
+  if (typeof addEventListener === 'function') {
+    addEventListener('storage', (event) => {
+      if (event.key !== KEY) return;
+      ledgers = parse(event.newValue);
+      emit();
+    });
+  }
+
+  const released = (id: string) => {
+    try {
+      return isReleased?.(id) === true;
+    } catch {
+      return false;
+    }
+  };
+
   return {
     ready,
     subscribe(listener) {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
-    isQuarantined: (id) => active && isQuarantined(ledgers[id], now()),
+    isQuarantined: (id) => active && isQuarantined(ledgers[id], now()) && !released(id),
+    list() {
+      const t = now();
+      return Object.entries(ledgers).map(([id, ledger]) => ({
+        id,
+        crashes: ledger.crashes.length,
+        ...(ledger.quarantinedUntil !== undefined && { quarantinedUntil: ledger.quarantinedUntil }),
+        quarantined: active && isQuarantined(ledger, t) && !released(id),
+      }));
+    },
+    release(id) {
+      if (!(id in ledgers)) return;
+      const { [id]: _, ...rest } = ledgers;
+      ledgers = rest;
+      persist();
+      emit();
+    },
     recordCrash(id, policy = {}) {
       const maxCrashes = policy.maxCrashes ?? 3;
       const result = addCrash(ledgers[id], now(), {

@@ -49,6 +49,7 @@ const quarantine = createQuarantine({ storage: webStorage(), appVersion: '1.4.0'
 - ⏳ **Self-healing**: quarantine lifts after the cooldown, and a new `appVersion` clears it at once
 - 📈 **One event, not a flood**: `onQuarantine` fires once per quarantine, ready for your analytics
 - 🌐 **SSR-safe**: server and hydration render "not quarantined", so no hydration mismatch
+- 🔁 **Remote release**: `isReleased(id)` turns a feature back on from your feature flags
 - 🧑‍💻 **Dev-friendly**: Fast Refresh crashes are recorded but never quarantine your own work
 - 🔐 **Private by design**: stores feature ids and timestamps, never error messages or user data
 - 🪶 **Tiny**: about 1.2 kB, works with any [`@helder-studio/storage`](https://github.com/helder-studio/storage) adapter
@@ -73,6 +74,7 @@ Pass any adapter from `@helder-studio/storage`. Without one, state lives in memo
 | `storage`         | `StorageAdapter`                   | `memory()` | where crash history is kept                 |
 | `appVersion`      | `string`                           |            | a different version clears every quarantine |
 | `onQuarantine`    | `({ id, crashes, until }) => void` |            | once per quarantine, not per crash          |
+| `isReleased`      | `(id) => boolean`                  |            | remote override, e.g. a feature flag        |
 | `quarantineInDev` | `boolean`                          | `false`    | quarantine in development builds too        |
 
 ### `<Quarantine>`
@@ -96,6 +98,34 @@ Pass any adapter from `@helder-studio/storage`. Without one, state lives in memo
 </Quarantine>;
 ```
 
+### `useQuarantineReport(id, policy?)`
+
+Error boundaries only see errors thrown while rendering. Report the rest (event handlers, async code)
+yourself; they count toward the same feature. Pass the same policy as its `<Quarantine>`.
+
+```tsx
+const report = useQuarantineReport('checkout-upsell', { maxCrashes: 3 });
+
+async function onPress() {
+  try {
+    await loadUpsell();
+  } catch {
+    report();
+  }
+}
+```
+
+### Debugging and remote release
+
+```ts
+quarantine.list(); // [{ id, crashes, quarantinedUntil, quarantined }]
+quarantine.release('checkout-upsell'); // clear one feature
+
+createQuarantine({ isReleased: (id) => flags.isOn(`release:${id}`) }); // switch back on remotely
+```
+
+On the web, a quarantine in one tab applies to the user's other open tabs right away.
+
 **Placement:** wrap features, not screens. A crash above the boundary isn't caught, and a boundary
 around a whole screen would quarantine the screen.
 
@@ -108,12 +138,6 @@ after a reload or app restart.
 | ----------------------------------- | ---------------------------- | --------------------------------------------------------------------------- |
 | [Next.js App Router](examples/next) | `webStorage()`               | `pnpm example:pack`, then `pnpm install && pnpm dev` in `examples/next`     |
 | [Expo dev build](examples/expo)     | `asyncStorage(AsyncStorage)` | `pnpm example:pack`, then `pnpm install && pnpm android` in `examples/expo` |
-
-## Coming soon
-
-- `isReleased(id)`: turn a quarantined feature back on remotely with your feature flags
-- `useQuarantineReport(id)`: report crashes boundaries can't see (event handlers, async code)
-- Multi-tab sync, `quarantine.list()` and `release(id)` for debugging
 
 ## Compared with react-error-boundary
 

@@ -135,6 +135,77 @@ describe('createQuarantine', () => {
     expect(q.isQuarantined('a')).toBe(false);
   });
 
+  it('lets isReleased switch a quarantined feature back on', () => {
+    let flag = false;
+    const q = createQuarantine({ quarantineInDev: true, isReleased: (id) => id === 'a' && flag });
+    q.recordCrash('a', policy);
+    q.recordCrash('a', policy);
+    expect(q.isQuarantined('a')).toBe(true);
+    flag = true;
+    expect(q.isQuarantined('a')).toBe(false);
+  });
+
+  it('treats a throwing isReleased as not released', () => {
+    const q = createQuarantine({
+      quarantineInDev: true,
+      isReleased: () => {
+        throw new Error('flags down');
+      },
+    });
+    q.recordCrash('a', policy);
+    q.recordCrash('a', policy);
+    expect(q.isQuarantined('a')).toBe(true);
+  });
+
+  it('lists features and releases one', () => {
+    const storage = memory();
+    const q = createQuarantine({ storage, quarantineInDev: true, now: () => 7 });
+    q.recordCrash('a', policy);
+    q.recordCrash('a', policy);
+    q.recordCrash('b', policy);
+    expect(q.list()).toEqual([
+      { id: 'a', crashes: 0, quarantinedUntil: 3_600_007, quarantined: true },
+      { id: 'b', crashes: 1, quarantined: false },
+    ]);
+    const listener = vi.fn();
+    q.subscribe(listener);
+    q.release('a');
+    q.release('missing');
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(q.isQuarantined('a')).toBe(false);
+    expect(
+      createQuarantine({ storage, quarantineInDev: true })
+        .list()
+        .map((e) => e.id),
+    ).toEqual(['b']);
+  });
+
+  it('adopts state written by another tab', () => {
+    let onStorage: ((e: { key: string | null; newValue: string | null }) => void) | undefined;
+    vi.stubGlobal('addEventListener', (_type: string, listener: typeof onStorage) => {
+      onStorage = listener;
+    });
+    try {
+      const other = memory();
+      const otherTab = createQuarantine({ storage: other, quarantineInDev: true });
+      otherTab.recordCrash('a', policy);
+      otherTab.recordCrash('a', policy);
+
+      const q = createQuarantine({ quarantineInDev: true });
+      const listener = vi.fn();
+      q.subscribe(listener);
+      onStorage?.({ key: 'unrelated', newValue: '{}' });
+      expect(listener).not.toHaveBeenCalled();
+      onStorage?.({ key: KEY, newValue: other.getItem(KEY) as string });
+      expect(q.isQuarantined('a')).toBe(true);
+      onStorage?.({ key: KEY, newValue: null });
+      expect(q.isQuarantined('a')).toBe(false);
+      expect(listener).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   describe('async storage', () => {
     it('is not quarantined until hydrated, then notifies', async () => {
       const inner = memory();
