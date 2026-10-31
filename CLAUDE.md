@@ -40,10 +40,12 @@ const report = useQuarantineReport('checkout-upsell'); // errors boundaries can'
 
 ## Status
 
-`@helder-studio/storage` is not on npm yet (Phase 0 gate). Add it as a dependency (`^0.1.0`) once
-published; until then the core takes a `StorageAdapter`-shaped object. Examples (`examples/expo`,
-`examples/next`) come next.
+MVP + most of v0.1 done: `src/core/ledger.ts` (pure ledger), `src/core/store.ts` (`createQuarantine`:
+hydration, appVersion reset, `onQuarantine`, dev guard, never-throw persistence under one key
+`helder-studio:quarantine`), `src/react/index.tsx` (provider, `<Quarantine>`, class boundary).
+React tests run in happy-dom with React's `act` (no Testing Library). Next: Expo + Next.js examples,
+RNTL test, then v0.2 (`isReleased`, `useQuarantineReport`, multi-tab sync, `list`/`release`).
 
 ## Commands
 
-`pnpm verify`, `pnpm changeset`.
+`pnpm verify`, `pnpm coverage` (gate: core > 90%), `pnpm changeset`.

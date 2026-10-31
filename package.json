@@ -47,7 +47,8 @@
     "size": "size-limit",
     "verify": "pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm check:pkg && pnpm size",
     "changeset": "changeset",
-    "release": "node scripts/publish.mjs"
+    "release": "node scripts/publish.mjs",
+    "coverage": "vitest run --coverage --coverage.include=src/**"
   },
   "size-limit": [
     {
@@ -72,11 +73,18 @@
     "@changesets/cli": "^3.0.3",
     "@size-limit/preset-small-lib": "^14.3.0",
     "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitest/coverage-v8": "^5.0.5",
+    "happy-dom": "^21.0.4",
     "publint": "^0.3.25",
     "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "size-limit": "^14.3.0",
     "tsup": "^9.0.0",
     "typescript": "^6.0.3",
     "vitest": "^5.0.5"
+  },
+  "dependencies": {
+    "@helder-studio/storage": "^0.1.1"
   }
 }
