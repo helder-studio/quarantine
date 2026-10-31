@@ -1,0 +1,82 @@
+{
+  "name": "@helder-studio/quarantine",
+  "version": "0.0.0",
+  "description": "Error boundary that switches a feature off for one user after repeated crashes, with cooldown and remote release. React and React Native.",
+  "keywords": [
+    "react",
+    "react-native",
+    "error-boundary",
+    "crash",
+    "circuit-breaker",
+    "feature-flag"
+  ],
+  "license": "MIT",
+  "author": "helder-studio",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/helder-studio/quarantine.git"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.cts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "test": "vitest run",
+    "check:pkg": "publint && attw --pack .",
+    "size": "size-limit",
+    "verify": "pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm check:pkg && pnpm size",
+    "changeset": "changeset",
+    "release": "pnpm build && changeset publish"
+  },
+  "size-limit": [
+    {
+      "path": "dist/index.js",
+      "limit": "3 kB",
+      "ignore": [
+        "react"
+      ]
+    }
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "packageManager": "pnpm@11.5.2",
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@biomejs/biome": "^2.6.4",
+    "@changesets/cli": "^3.0.3",
+    "@size-limit/preset-small-lib": "^14.3.0",
+    "@types/react": "^19.3.0",
+    "publint": "^0.3.25",
+    "react": "^19.3.1",
+    "size-limit": "^14.3.0",
+    "tsup": "^9.0.0",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.5"
+  }
+}

@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+concurrency: release-${{ github.ref }}
+
+permissions:
+  contents: write # commit version bumps, push tags, create GitHub releases
+  pull-requests: write # open the "Version Packages" PR
+  id-token: write # npm provenance and trusted publishing
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm verify
+      - uses: changesets/action@v2.1.2 # no moving v2 tag; the v2 branch is the dev head
+        with:
+          publish-script: pnpm release
+        env:
+          # Needed for the first publish only. Once the package exists, configure npm trusted
+          # publishing for this workflow and delete the NPM_TOKEN secret.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
