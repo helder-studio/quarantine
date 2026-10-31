@@ -7,9 +7,9 @@ on:
 concurrency: release-${{ github.ref }}
 
 permissions:
-  contents: write # commit version bumps, push tags, create GitHub releases
+  contents: write # push tags, create GitHub releases, commit version bumps
   pull-requests: write # open the "Version Packages" PR
-  id-token: write # npm provenance and trusted publishing
+  id-token: write # npm trusted publishing and provenance
 
 jobs:
   release:
@@ -21,13 +21,15 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-          registry-url: https://registry.npmjs.org
+          # No registry-url: it writes an .npmrc with a placeholder NODE_AUTH_TOKEN that shadows OIDC.
       - run: pnpm install --frozen-lockfile
       - run: pnpm verify
-      - uses: changesets/action@v2.1.2 # no moving v2 tag; the v2 branch is the dev head
-        with:
-          publish-script: pnpm release
+      # Pending changesets: open or update the Version Packages PR. Nothing is published here.
+      - id: changesets
+        uses: changesets/action@v2.1.2 # no moving v2 tag; the v2 branch is the dev head
+      # No pending changesets: publish with the npm CLI. Auth comes from npm trusted publishing
+      # (OIDC via id-token), so no NPM_TOKEN secret is needed.
+      - if: steps.changesets.outputs.has-changesets == 'false'
+        run: npm --version && pnpm release
         env:
-          # Needed for the first publish only. Once the package exists, configure npm trusted
-          # publishing for this workflow and delete the NPM_TOKEN secret.
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GH_TOKEN: ${{ github.token }}

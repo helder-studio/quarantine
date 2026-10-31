@@ -47,7 +47,7 @@
     "size": "size-limit",
     "verify": "pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm check:pkg && pnpm size",
     "changeset": "changeset",
-    "release": "pnpm build && changeset publish"
+    "release": "node scripts/publish.mjs"
   },
   "size-limit": [
     {
