@@ -48,7 +48,8 @@
     "verify": "pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm check:pkg && pnpm size",
     "changeset": "changeset",
     "release": "node scripts/publish.mjs",
-    "coverage": "vitest run --coverage --coverage.include=src/**"
+    "coverage": "vitest run --coverage --coverage.include=src/**",
+    "example:pack": "pnpm build && pnpm pack --out examples/quarantine.tgz"
   },
   "size-limit": [
     {

@@ -43,8 +43,8 @@ const report = useQuarantineReport('checkout-upsell'); // errors boundaries can'
 MVP + most of v0.1 done: `src/core/ledger.ts` (pure ledger), `src/core/store.ts` (`createQuarantine`:
 hydration, appVersion reset, `onQuarantine`, dev guard, never-throw persistence under one key
 `helder-studio:quarantine`), `src/react/index.tsx` (provider, `<Quarantine>`, class boundary).
-React tests run in happy-dom with React's `act` (no Testing Library). Next: Expo + Next.js examples,
-RNTL test, then v0.2 (`isReleased`, `useQuarantineReport`, multi-tab sync, `list`/`release`).
+React tests run in happy-dom with React's `act` (no Testing Library). Examples: `examples/next` and `examples/expo` install the library from `examples/quarantine.tgz`
+(`pnpm example:pack`; `file:` directory links don't copy `dist` on exFAT). Next: RNTL test, then v0.2 (`isReleased`, `useQuarantineReport`, multi-tab sync, `list`/`release`).
 
 ## Commands
 

@@ -99,12 +99,21 @@ Pass any adapter from `@helder-studio/storage`. Without one, state lives in memo
 **Placement:** wrap features, not screens. A crash above the boundary isn't caught, and a boundary
 around a whole screen would quarantine the screen.
 
+## Examples
+
+Both show the same flaky widget: crash it 3 times within a minute and it stays off for 30 seconds, even
+after a reload or app restart.
+
+| Example                             | Storage                      | Run                                                                         |
+| ----------------------------------- | ---------------------------- | --------------------------------------------------------------------------- |
+| [Next.js App Router](examples/next) | `webStorage()`               | `pnpm example:pack`, then `pnpm install && pnpm dev` in `examples/next`     |
+| [Expo dev build](examples/expo)     | `asyncStorage(AsyncStorage)` | `pnpm example:pack`, then `pnpm install && pnpm android` in `examples/expo` |
+
 ## Coming soon
 
 - `isReleased(id)`: turn a quarantined feature back on remotely with your feature flags
 - `useQuarantineReport(id)`: report crashes boundaries can't see (event handlers, async code)
 - Multi-tab sync, `quarantine.list()` and `release(id)` for debugging
-- Expo and Next.js examples
 
 ## Compared with react-error-boundary
 

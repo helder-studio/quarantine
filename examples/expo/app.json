@@ -1,0 +1,9 @@
+{
+  "expo": {
+    "name": "Quarantine example",
+    "slug": "quarantine-example",
+    "version": "1.0.0",
+    "android": { "package": "studio.helder.quarantine.example" },
+    "ios": { "bundleIdentifier": "studio.helder.quarantine.example" }
+  }
+}

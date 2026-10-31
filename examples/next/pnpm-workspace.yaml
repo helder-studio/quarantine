@@ -1,0 +1,4 @@
+minimumReleaseAgeExclude:
+  - "@helder-studio/storage@0.1.1"
+nodeLinker: hoisted
+packageImportMethod: copy
