@@ -1,5 +1,11 @@
 # @helder-studio/quarantine
 
+## 0.1.1
+
+### Patch Changes
+
+- b9faa62: Update dependencies: @helder-studio/storage.
+
 ## 0.1.0
 
 ### Minor Changes

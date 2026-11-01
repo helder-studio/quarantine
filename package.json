@@ -1,6 +1,6 @@
 {
   "name": "@helder-studio/quarantine",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Error boundary that switches a feature off for one user after repeated crashes, with cooldown and remote release. React and React Native.",
   "keywords": [
     "react",
