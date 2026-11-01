@@ -11,7 +11,10 @@
     "feature-flag"
   ],
   "license": "MIT",
-  "author": "helder-studio",
+  "author": {
+    "name": "helder-studio",
+    "url": "https://www.helderstudio.com/en/"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/helder-studio/quarantine.git"
