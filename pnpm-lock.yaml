@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@helder-studio/storage':
         specifier: ^0.1.1
-        version: 0.1.1
+        version: 0.1.2
     devDependencies:
       '@arethetypeswrong/cli':
         specifier: ^0.18.5
@@ -394,8 +394,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@helder-studio/storage@0.1.1':
-    resolution: {integrity: sha512-Bo8pGRsqFFilOVp5tyvK0o21tmjutei6ZKdVepkUNTG1+/QD+3QKuJXbEHu2DQ9Uljbp6+nqFzmoI86Mqv1zxg==}
+  '@helder-studio/storage@0.1.2':
+    resolution: {integrity: sha512-Dumj97ggRdEEbT9F/yikh7s/mkFeG/hFMBWUbm/ZfbeYkZ7+mqRy+QLJXIn+wXrL77Qwvc+cywf5km2lZTs7iA==}
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -1737,7 +1737,7 @@ snapshots:
   '@esbuild/win32-x64@0.28.2':
     optional: true
 
-  '@helder-studio/storage@0.1.1': {}
+  '@helder-studio/storage@0.1.2': {}
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:
