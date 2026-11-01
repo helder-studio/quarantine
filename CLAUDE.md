@@ -1,5 +1,7 @@
 # @helder-studio/quarantine
 
+Shared rules, commands and conventions: @AGENTS.md
+
 Error boundary that switches a feature off for one user after N crashes in a window, with cooldown,
 app-version reset and remote release. Web + React Native, pure JS. PDF: "Library 1: Quarantine".
 
