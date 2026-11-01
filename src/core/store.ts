@@ -3,6 +3,7 @@ import { type Duration, toMs } from './duration';
 import { recordCrash as addCrash, isQuarantined, type Ledger } from './ledger';
 
 declare const __DEV__: boolean | undefined;
+declare function setTimeout(callback: () => void, ms: number): unknown;
 declare const process: { env: { NODE_ENV?: string } } | undefined;
 // Present in browsers only; used for multi-tab sync.
 declare const addEventListener:
@@ -89,6 +90,18 @@ export function createQuarantine(options: QuarantineOptions = {}): QuarantineSto
     for (const listener of listeners) listener();
   };
 
+  // Re-render subscribers when a quarantine ends, so a feature comes back in a long session.
+  const MAX_DELAY = 2_147_483_647; // setTimeout's limit (~24.8 days)
+  const scheduleLift = (all: Record<string, Ledger>) => {
+    const t = now();
+    for (const ledger of Object.values(all)) {
+      const ms = (ledger.quarantinedUntil ?? 0) - t;
+      if (ms <= 0 || ms > MAX_DELAY) continue;
+      const timer = setTimeout(emit, ms) as { unref?: () => void };
+      timer.unref?.(); // never keeps Node (SSR, tests) alive
+    }
+  };
+
   const persist = () => {
     // Writing before the stored state is loaded would overwrite it.
     if (!hydrated) {
@@ -128,6 +141,7 @@ export function createQuarantine(options: QuarantineOptions = {}): QuarantineSto
     // ponytail: ids crashed before hydration keep only their in-memory ledger.
     ledgers = { ...parse(raw), ...ledgers };
     hydrated = true;
+    scheduleLift(ledgers);
     if (dirty) persist();
   };
 
@@ -148,6 +162,7 @@ export function createQuarantine(options: QuarantineOptions = {}): QuarantineSto
     addEventListener('storage', (event) => {
       if (event.key !== KEY) return;
       ledgers = parse(event.newValue);
+      scheduleLift(ledgers);
       emit();
     });
   }
@@ -192,6 +207,7 @@ export function createQuarantine(options: QuarantineOptions = {}): QuarantineSto
       });
       ledgers = { ...ledgers, [id]: result.ledger };
       persist();
+      if (result.quarantined) scheduleLift({ [id]: result.ledger });
       if (result.quarantined && active && onQuarantine) {
         try {
           onQuarantine({

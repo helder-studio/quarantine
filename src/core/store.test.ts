@@ -51,6 +51,24 @@ describe('createQuarantine', () => {
     expect(q.isQuarantined('a')).toBe(false);
   });
 
+  it('notifies subscribers when a quarantine ends', () => {
+    vi.useFakeTimers();
+    try {
+      const q = createQuarantine({ quarantineInDev: true, now: () => Date.now() });
+      const listener = vi.fn();
+      q.subscribe(listener);
+      q.recordCrash('a', { maxCrashes: 1, cooldown: '30s' });
+      expect(listener).toHaveBeenCalledTimes(1);
+      vi.advanceTimersByTime(29_999);
+      expect(listener).toHaveBeenCalledTimes(1);
+      vi.advanceTimersByTime(1);
+      expect(listener).toHaveBeenCalledTimes(2);
+      expect(q.isQuarantined('a')).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('survives a reload through storage', () => {
     const storage = memory();
     const first = createQuarantine({ storage, quarantineInDev: true });
